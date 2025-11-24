@@ -108,6 +108,12 @@ def parse_block(block: str, header: dict) -> dict:
         match = re.search(pattern, block, re.IGNORECASE)
         return match.group(1).strip() if match else ""
 
+    def clean_nome(value: str) -> str:
+        if not value:
+            return ""
+        # Remove parte de cidade colada ao nome (ex.: "Nome Cliente Cidade: DIVINÓPOLIS")
+        return re.sub(r"\s*Cidade:\s*.*$", "", value, flags=re.IGNORECASE).strip(" -")
+
     numero_nota = find(r"^\s*(\d{3,5}-\d+)")
 
     nome_line = find(r"Nome:\s*([^\n]+)")
@@ -116,9 +122,9 @@ def parse_block(block: str, header: dict) -> dict:
         code_match = re.match(r"(\d+)\s*-\s*(.+)", nome_line)
         if code_match:
             codigo_cliente = code_match.group(1).strip()
-            nome_cliente = code_match.group(2).strip()
+            nome_cliente = clean_nome(code_match.group(2).strip())
         else:
-            nome_cliente = nome_line
+            nome_cliente = clean_nome(nome_line)
 
     pedido = find(r"Pedido:\s*([^\n]+)")
     cidade = find(r"Cidade:\s*([^\n]+)")
