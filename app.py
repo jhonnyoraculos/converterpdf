@@ -13,6 +13,7 @@ COLUMNS = [
     "motorista",
     "veiculo",
     "carga",
+    "peso_carga",
     "numero_nota",
     "codigo_cliente",
     "nome_cliente",
@@ -56,17 +57,26 @@ def extract_header_fields(text: str) -> dict:
 
     data_emissao = find(r"Emiss[aã]o:\s*([\d/]{8,10})")
     data_previsao = find(r"Previs[aã]o:\s*([\d/]{8,10})")
-    motorista = find(r"Motorista:\s*([^\n]+)")
+    motorista_raw = find(r"Motorista:\s*([^\n]+)")
+    peso_carga = find(r"Peso\s*Carga[:\s]+([0-9\.,]+)")
     veiculo = find(r"Ve[ií]culo:\s*([^\n]+)")
     carga = find(r"Carga[:\s]+([0-9\.,]+)")
+
+    # Se o peso estiver junto na linha do motorista, separa
+    if motorista_raw:
+        peso_inline = re.search(r"Peso\s*Carga[:\s]+([0-9\.,]+)", motorista_raw, re.IGNORECASE)
+        if peso_inline and not peso_carga:
+            peso_carga = peso_inline.group(1).strip()
+        motorista_raw = re.sub(r"Peso\s*Carga[:\s]+[0-9\.,]+", "", motorista_raw, flags=re.IGNORECASE).strip(" -")
 
     return {
         "rota": rota,
         "data_emissao": data_emissao,
         "data_previsao": data_previsao,
-        "motorista": motorista,
+        "motorista": motorista_raw,
         "veiculo": veiculo,
         "carga": carga,
+        "peso_carga": peso_carga,
     }
 
 
